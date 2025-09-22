@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<form method="post" action="/entry/{{ e.id }}/edit">
+  <label>Termo<input name="term" value="{{ e.term }}"></label>
+  <label>Tradução/Explicação<input name="meaning" value="{{ e.meaning or '' }}"></label>
+  <label>Exemplo<textarea name="example">{{ e.example or '' }}</textarea></label>
+  <div class="grid">
+    <label>Deck<input name="deck" value="{{ e.deck }}"></label>
+    <label>Modelo<input name="model" value="{{ e.model }}"></label>
+    <label>Tags<input name="tags" value="{{ e.tags }}"></label>
+  </div>
+  <button>Salvar</button>
+</form>
+<p><strong>note_id:</strong> {{ e.anki_note_id or '—' }}</p>
+<form method="post" action="/push/{{ e.id }}"><button>Enviar/Atualizar no Anki</button></form>
+{% endblock %}

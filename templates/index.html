@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<article>
+  <p>
+    <strong>Total:</strong> {{ total }} &nbsp;|&nbsp;
+    <strong>Hoje:</strong> {{ today }}
+  </p>
+  {% if by_tag %}
+  <details>
+    <summary>Por tag</summary>
+    <ul>
+    {% for k, v in by_tag.items() %}
+      <li><span class="badge">{{ k }}</span> — {{ v }}</li>
+    {% endfor %}
+    </ul>
+  </details>
+  {% endif %}
+
+  <h4>Adicionar</h4>
+  <form method="post" action="/add">
+    <div class="grid">
+      <input name="term" placeholder="Termo/expressão" required>
+      <input name="meaning" placeholder="Tradução/explicação">
+    </div>
+    <textarea name="example" placeholder="Frase de exemplo"></textarea>
+    <div class="grid">
+      <input name="deck" value="{{ request.args.get('deck','') or '' }}" placeholder="Deck (default: env DEFAULT_DECK)">
+      <input name="model" value="{{ request.args.get('model','') or '' }}" placeholder="Modelo (default: Basic)">
+      <input name="tags" value="{{ request.args.get('tags','') or '' }}" placeholder="Tags separadas por espaço (default: anki-bau)">
+    </div>
+    <button type="submit">Adicionar ao Baú</button>
+  </form>
+</article>
+
+<h4>Últimas entradas</h4>
+<table>
+  <thead><tr><th>Termo</th><th>Deck</th><th>Tags</th><th>Anki</th><th>Ações</th></tr></thead>
+  <tbody>
+  {% for e in entries %}
+    <tr>
+      <td><a href="/entry/{{ e.id }}">{{ e.term }}</a></td>
+      <td>{{ e.deck }}</td>
+      <td>{{ e.tags }}</td>
+      <td>{% if e.anki_note_id %}✔ {{ e.anki_note_id }}{% else %}—{% endif %}</td>
+      <td>
+        <form method="post" action="/push/{{ e.id }}"><button>Enviar/Atualizar no Anki</button></form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
