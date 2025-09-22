@@ -14,7 +14,7 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "Basic")
 DEFAULT_TAGS = os.getenv("DEFAULT_TAGS", "anki-bau")
 
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///bau.db"
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bau.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.getenv("FLASK_SECRET", "dev")
 

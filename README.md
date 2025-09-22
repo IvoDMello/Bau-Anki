@@ -52,3 +52,23 @@ cofre-anki/
 - Gamificação: achievements, temas/skins.
 - Leitura de reviews (interval/accuracy) para “aprendida v2”.
 - PWA/Mobile, onboarding (curso de 7 dias).
+
+## Usando MySQL
+1) Instale o servidor MySQL e crie o banco/usuário (exemplo):
+```sql
+CREATE DATABASE wordvault CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'usuario'@'localhost' IDENTIFIED BY 'senha';
+GRANT ALL PRIVILEGES ON wordvault.* TO 'usuario'@'localhost';
+FLUSH PRIVILEGES;
+```
+
+2) No arquivo `.env` defina:
+```
+DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/wordvault
+```
+
+3) Instale as dependências (inclui PyMySQL) e rode:
+```bash
+pip install -r requirements.txt
+python app.py
+```

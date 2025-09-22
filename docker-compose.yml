@@ -1,0 +1,41 @@
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: wordvault
+      MYSQL_USER: worduser
+      MYSQL_PASSWORD: wordpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    volumes:
+      - dbdata:/var/lib/mysql
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # Banco dentro da rede do compose (hostname 'db')
+      DATABASE_URL: mysql+pymysql://worduser:wordpass@db:3306/wordvault
+      # AnkiConnect no host (Docker Desktop/WSL): host.docker.internal
+      ANKI_URL: http://host.docker.internal:8765
+      FLASK_SECRET: dev
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  dbdata:
