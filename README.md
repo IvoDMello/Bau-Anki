@@ -72,3 +72,13 @@ DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/wordvault
 pip install -r requirements.txt
 python app.py
 ```
+
+para iniciar a VM
+```bash
+.venv\Scripts\activate
+```
+
+para puxar os requerimentos
+```bash
+pip install -r requirements.txt
+```

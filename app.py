@@ -20,8 +20,8 @@ app.secret_key = os.getenv("FLASK_SECRET", "dev")
 
 db.init_app(app)
 
-@app.before_first_request
-def init_db():
+# cria o banco assim que o app sobe
+with app.app_context():
     db.create_all()
 
 @app.get("/")
