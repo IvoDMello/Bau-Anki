@@ -1,16 +1,23 @@
 services:
+  # --- SERVIÇO 1: O BANCO DE DADOS ---
   db:
-    image: mysql:8.0
+    image: mysql:8.0  # Baixa a imagem oficial do MySQL 8.
     environment:
+      # Define as senhas e usuários automaticamente na primeira execução.
       MYSQL_DATABASE: wordvault
       MYSQL_USER: worduser
       MYSQL_PASSWORD: wordpass
       MYSQL_ROOT_PASSWORD: rootpass
     ports:
-      - "3306:3306"
+      # Mapeia a porta do container para o seu Windows.
+      # Formato: "PORTA_WINDOWS : PORTA_CONTAINER"
+      - "3307:3306"
     volumes:
+      # Persistência! Salva os dados do banco num volume gerenciado pelo Docker.
+      # Se você deletar o container, os dados continuam salvos aqui.
       - dbdata:/var/lib/mysql
-    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    
+    # Check de Saúde: O App só inicia se o MySQL responder "estou vivo".
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-prootpass"]
       interval: 5s
@@ -18,24 +25,30 @@ services:
       retries: 20
       start_period: 10s
 
+  # --- SERVIÇO 2: SEU APLICATIVO ---
   app:
     build:
-      context: .
+      context: .             # Onde está o Dockerfile? Aqui mesmo (.)
       dockerfile: Dockerfile
     environment:
-      # Banco dentro da rede do compose (hostname 'db')
+      # Conecta no serviço 'db' acima. Note que usamos o nome do serviço 'db' como host.
+      # O Docker resolve esse nome internamente.
       DATABASE_URL: mysql+pymysql://worduser:wordpass@db:3306/wordvault
-      # AnkiConnect no host (Docker Desktop/WSL): host.docker.internal
+      # URL especial para acessar o Windows de dentro do Docker (para o AnkiConnect).
       ANKI_URL: http://host.docker.internal:8765
       FLASK_SECRET: dev
     ports:
-      - "5000:5000"
+      - "5000:5000" # Acessar no navegador via localhost:5000
     depends_on:
+      # Garante a ordem: Só liga o app se o db estiver "saudável" (healthy).
       db:
         condition: service_healthy
     volumes:
+      # "Espelhamento": O que você edita no VS Code aparece no container na hora.
+      # Útil para desenvolvimento, evita ter que recriar a imagem a cada mudança.
       - .:/app
     restart: unless-stopped
 
+# Declaração do volume nomeado usado acima
 volumes:
   dbdata:
