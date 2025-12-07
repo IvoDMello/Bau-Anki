@@ -1,3 +1,4 @@
+from services.gamification import calculate_level
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
@@ -29,8 +30,18 @@ def index():
     total = S.count_total()
     today = S.count_today()
     by_tag = S.count_by_tag()
+    gamification = calculate_level(total, total)
     entries = Entry.query.order_by(Entry.created_at.desc()).limit(100).all()
-    return render_template("index.html", entries=entries, total=total, today=today, by_tag=by_tag)
+    return render_template(
+        "index.html", 
+        entries=entries, 
+        total=total, 
+        today=today, 
+        by_tag=by_tag,
+        gamification=gamification # Passamos o objeto para o HTML
+    )
+    
+
 
 @app.post("/add")
 def add():

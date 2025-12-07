@@ -1,0 +1,22 @@
+# --- Byte-compiled / Otimizados ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# --- Ambientes Virtuais (Nunca suba isso!) ---
+.venv/
+venv/
+env/
+
+# --- Banco de Dados (SQLite) ---
+*.db
+*.sqlite3
+instance/
+
+# --- Variáveis de Ambiente (Segurança) ---
+.env
+
+# --- Logs e Arquivos de Sistema ---
+*.log
+.DS_Store
+Thumbs.db

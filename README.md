@@ -1,84 +1,83 @@
-# WordVault (Baú de Palavras) — MVP
+# WordVault (Projeto Baú Anki) 📚
 
-App local (Flask + SQLite) que integra com **Anki** via **AnkiConnect**, para cadastrar termos, enviar/atualizar notas e visualizar contadores. Base para gamificação e onboarding de SRS.
+Um gerenciador de vocabulário gamificado, *local-first*, que evolui visualmente conforme o progresso do estudante. O projeto serve como um hub intermediário para coletar palavras antes de enviá-las para o Anki (SRS) via API.
 
-## Requisitos
-- Python 3.10+
-- Anki instalado
-- Add-on **AnkiConnect** (ID: 2055492159) — abra o Anki, instale o addon e mantenha o Anki aberto enquanto usa o app.
+![Python](https://img.shields.io/badge/Python-3.12+-blue.svg)
+![Flask](https://img.shields.io/badge/Flask-3.0+-green.svg)
+![SQLite](https://img.shields.io/badge/Database-SQLite-lightgrey)
 
-## Como rodar
-```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# Linux/macOS
-# source .venv/bin/activate
+## 🎯 Objetivo do Projeto
 
-pip install -r requirements.txt
+Resolver a fricção de adicionar palavras diretamente no Anki, criando uma interface intermediária agradável que recompensa a consistência.
+O sistema implementa uma lógica de **"Evolução de Interface"**: o app começa com um design rústico (Nível 0) e desbloqueia CSS moderno (Nível 1, 2) conforme o banco de dados de palavras cresce.
 
-# copie .env.example para .env e ajuste se quiser
-# Windows (PowerShell):
-Copy-Item .env.example .env
-# Linux/macOS:
-# cp .env.example .env
+## 🛠️ Stack Tecnológico
 
-python app.py
-```
-Abra http://127.0.0.1:5000 (deixe o Anki aberto).
+* **Backend & Lógica:** Python 3.12, Flask.
+* **Banco de Dados:** SQLite (Modelagem via SQLAlchemy ORM).
+* **Frontend:** Jinja2, HTML5, CSS Dinâmico (injeção baseada em regras de negócio).
+* **Integração:** REST API (Consumo da API local `anki-connect`).
 
-## Estrutura
-```
-cofre-anki/
-├─ app.py
-├─ ankiconnect.py
-├─ models.py
-├─ services/
-│   ├─ normalizer.py
-│   └─ stats.py
-├─ templates/
-│   ├─ base.html
-│   ├─ index.html
-│   └─ detail.html
-├─ static/
-│   └─ themes/
-├─ scripts/
-│   └─ test_anki.py
-├─ requirements.txt
-└─ .env.example
-```
+## ⚙️ Funcionalidades
 
-## Próximos passos
-- Gamificação: achievements, temas/skins.
-- Leitura de reviews (interval/accuracy) para “aprendida v2”.
-- PWA/Mobile, onboarding (curso de 7 dias).
+1.  **CRUD de Palavras:** Adição rápida de Termo, Significado e Exemplos.
+2.  **Gamificação de Interface:**
+    * *Nível 0 (< 5 palavras):* Estilo "Terminal/Raw HTML".
+    * *Nível 1 (5+ palavras):* Estilo Clean (PicoCSS).
+    * *Nível 2 (20+ palavras):* Estilo Premium (Dark Mode/Glassmorphism).
+3.  **Analytics Simples:** Contadores de palavras totais e sessões diárias.
+4.  **Sincronização:** Botão para empurrar (Push) cards formatados diretamente para o Anki Desktop.
 
-## Usando MySQL
-1) Instale o servidor MySQL e crie o banco/usuário (exemplo):
-```sql
-CREATE DATABASE wordvault CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'usuario'@'localhost' IDENTIFIED BY 'senha';
-GRANT ALL PRIVILEGES ON wordvault.* TO 'usuario'@'localhost';
-FLUSH PRIVILEGES;
-```
+## 🚀 Como Rodar Localmente
 
-2) No arquivo `.env` defina:
-```
-DATABASE_URL=mysql+pymysql://usuario:senha@localhost:3306/wordvault
-```
+### Pré-requisitos
+* Python 3.10+
+* Anki Desktop (com o add-on AnkiConnect instalado) - *Opcional para rodar, necessário para sincronizar.*
 
-3) Instale as dependências (inclui PyMySQL) e rode:
-```bash
-pip install -r requirements.txt
-python app.py
-```
+### Instalação
 
-para iniciar a VM
-```bash
-.venv\Scripts\activate
-```
+1.  **Clone o repositório:**
+    ```bash
+    git clone [https://github.com/SEU_USUARIO/bau-anki.git](https://github.com/SEU_USUARIO/bau-anki.git)
+    cd bau-anki
+    ```
 
-para puxar os requerimentos
-```bash
-pip install -r requirements.txt
-```
+2.  **Configure o Ambiente Virtual (Boa Prática):**
+    ```bash
+    python -m venv .venv
+    # Windows
+    .\.venv\Scripts\Activate
+    # Linux/Mac
+    source .venv/bin/activate
+    ```
+
+3.  **Instale as dependências:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4.  **Configure as Variáveis:**
+    Crie um arquivo `.env` na raiz (use `.env.example` como base):
+    ```ini
+    FLASK_APP=app.py
+    FLASK_ENV=development
+    DATABASE_URL=sqlite:///bau.db
+    SECRET_KEY=sua_chave_secreta_aqui
+    ```
+
+5.  **Execute:**
+    ```bash
+    python app.py
+    ```
+    Acesse em: `http://127.0.0.1:5000`
+
+## 📂 Estrutura de Pastas
+
+## 📝 Próximos Passos (Roadmap)
+
+* [ ] Dashboard com gráficos de frequência de estudo (Plotly/Matplotlib).
+* [ ] Pipeline de NLP para buscar definições automáticas.
+* [ ] Exportação para CSV/Excel para análise de dados.
+
+---
+*Desenvolvido por Ivo como projeto de portfólio em Engenharia de Dados e Backend.*
