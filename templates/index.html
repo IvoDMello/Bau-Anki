@@ -1,52 +1,86 @@
 {% extends "base.html" %}
+
 {% block content %}
-<article>
-  <p>
-    <strong>Total:</strong> {{ total }} &nbsp;|&nbsp;
-    <strong>Hoje:</strong> {{ today }}
-  </p>
-  {% if by_tag %}
-  <details>
-    <summary>Por tag</summary>
-    <ul>
-    {% for k, v in by_tag.items() %}
-      <li><span class="badge">{{ k }}</span> — {{ v }}</li>
-    {% endfor %}
-    </ul>
-  </details>
-  {% endif %}
+<div class="game-wrapper" 
+     style="background-image: url('{{ url_for('static', filename='images/' + gamification.bg_image) }}');">
 
-  <h4>Adicionar</h4>
-  <form method="post" action="/add">
-    <div class="grid">
-      <input name="term" placeholder="Termo/expressão" required>
-      <input name="meaning" placeholder="Tradução/explicação">
+  <header class="game-header">
+    <div class="user-profile">
+      <div class="avatar">👤</div> 
+      <div class="user-info">
+        <span class="username">Ivo</span>
+        <div class="level-indicator">
+          <span class="level-badge">Nível {{ gamification.level }}</span>
+          <div class="progress-bar">
+            <div class="fill" style="width: {{ (total % 20) * 5 }}%"></div>
+          </div>
+        </div>
+      </div>
     </div>
-    <textarea name="example" placeholder="Frase de exemplo"></textarea>
-    <div class="grid">
-      <input name="deck" value="{{ request.args.get('deck','') or '' }}" placeholder="Deck (default: env DEFAULT_DECK)">
-      <input name="model" value="{{ request.args.get('model','') or '' }}" placeholder="Modelo (default: Basic)">
-      <input name="tags" value="{{ request.args.get('tags','') or '' }}" placeholder="Tags separadas por espaço (default: anki-bau)">
-    </div>
-    <button type="submit">Adicionar ao Baú</button>
-  </form>
-</article>
 
-<h4>Últimas entradas</h4>
-<table>
-  <thead><tr><th>Termo</th><th>Deck</th><th>Tags</th><th>Anki</th><th>Ações</th></tr></thead>
-  <tbody>
-  {% for e in entries %}
-    <tr>
-      <td><a href="/entry/{{ e.id }}">{{ e.term }}</a></td>
-      <td>{{ e.deck }}</td>
-      <td>{{ e.tags }}</td>
-      <td>{% if e.anki_note_id %}✔ {{ e.anki_note_id }}{% else %}—{% endif %}</td>
-      <td>
-        <form method="post" action="/push/{{ e.id }}"><button>Enviar/Atualizar no Anki</button></form>
-      </td>
-    </tr>
-  {% endfor %}
-  </tbody>
-</table>
+    <nav class="top-nav">
+      <a href="{{ url_for('index') }}" class="nav-btn active">🏠 Início</a>
+      <a href="#" class="nav-btn">🏆 Ranking</a>
+      <a href="#" class="nav-btn">📊 Stats</a>
+      <a href="#" class="nav-btn">📚 Baú</a>
+    </nav>
+  </header>
+
+  <main class="game-main">
+    <div class="chest-display">
+      <img src="{{ url_for('static', filename='images/' + gamification.chest_image) }}" 
+           alt="Baú do Tesouro" 
+           class="chest-anim">
+      
+      <div class="chest-message">
+        <h2>{{ gamification.title }}</h2>
+        <p>Você tem <strong>{{ total }}</strong> frases guardadas.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer class="game-actions">
+    
+    <button class="action-btn add-btn" onclick="document.getElementById('add-modal').showModal()">
+      ➕ Adicionar
+    </button>
+
+    <a href="{{ url_for('study_session') }}" class="action-btn study-btn" role="button">
+      ⚔️ Estudar
+      {% if due_count > 0 %}
+        <span class="notification-badge">{{ due_count }}</span>
+      {% endif %}
+    </a>
+
+  </footer>
+
+</div>
+
+<dialog id="add-modal">
+  <article>
+    <header>
+      <h3>Adicionar ao Baú</h3>
+      <button aria-label="Close" rel="prev" onclick="this.closest('dialog').close()"></button>
+    </header>
+    <form action="{{ url_for('add') }}" method="POST">
+      <label>
+        Frase
+        <input type="text" name="term" placeholder="Ex: We need to move onwards" required>
+      </label>
+      <label>
+        Significado / Tradução
+        <input type="text" name="meaning" placeholder="Ex: Precisamos seguir em frente">
+      </label>
+      <label>
+        Palavra Foco (Opcional)
+        <input type="text" name="target_word" placeholder="Ex: onwards">
+      </label>
+      
+      <footer>
+        <button type="button" class="secondary" onclick="this.closest('dialog').close()">Cancelar</button>
+        <button type="submit">Salvar no Baú</button>
+      </footer>
+    </form>
+  </article>
+</dialog>
 {% endblock %}

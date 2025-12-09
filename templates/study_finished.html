@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<article>
+  <header><h1>🎉 Tudo pronto por hoje!</h1></header>
+  <p>Você revisou todos os cards pendentes. O Baú está fechado por enquanto.</p>
+  <footer>
+      <a href="{{ url_for('index') }}" role="button" class="secondary">Voltar ao Início</a>
+  </footer>
+</article>
+{% endblock %}

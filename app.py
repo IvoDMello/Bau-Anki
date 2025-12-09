@@ -1,11 +1,15 @@
-from services.gamification import calculate_level
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
+from datetime import datetime
+
+# Seus modelos e serviços
 from models import db, Entry
 from services.normalizer import to_unique_key
 from services import stats as S
+from services.gamification import calculate_level 
+from services.srs import calculate_next_review    
 from ankiconnect import create_deck, add_note, update_note_fields
 
 load_dotenv()
@@ -15,82 +19,122 @@ DEFAULT_MODEL = os.getenv("DEFAULT_MODEL", "Basic")
 DEFAULT_TAGS = os.getenv("DEFAULT_TAGS", "anki-bau")
 
 app = Flask(__name__)
+# Configuração para MySQL (Docker) ou SQLite (Fallback)
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URL", "sqlite:///bau.db")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = os.getenv("FLASK_SECRET", "dev")
 
 db.init_app(app)
 
-# cria o banco assim que o app sobe
+# Cria o banco ao iniciar (se não existir)
 with app.app_context():
     db.create_all()
 
+# --- NOVO: Context Processor para injetar variáveis globais ---
+@app.context_processor
+def inject_globals():
+    # Isso garante que 'total' esteja disponível em TODAS as telas (evita erros no base.html)
+    return dict(total=S.count_total())
+
 @app.get("/")
 def index():
-    total = S.count_total()
+    # Analytics
+    total = S.count_total() # (Ainda calculamos aqui para usar na gamificação)
     today = S.count_today()
     by_tag = S.count_by_tag()
+    
+    # --- A CORREÇÃO DO ERRO ESTÁ AQUI 👇 ---
+    # Contar quantos cards vencem hoje ou antes (para o badge vermelho)
+    now = datetime.utcnow()
+    due_count = Entry.query.filter(
+        (Entry.next_review <= now) | (Entry.next_review == None)
+    ).count()
+    # --------------------------------------
+
+    # Gamificação
     gamification = calculate_level(total, total)
-    entries = Entry.query.order_by(Entry.created_at.desc()).limit(100).all()
+    
+    # Busca as últimas entradas para a lista (opcional, se quiser mostrar abaixo)
+    entries = Entry.query.order_by(Entry.created_at.desc()).limit(10).all()
+    
     return render_template(
         "index.html", 
         entries=entries, 
-        total=total, 
         today=today, 
         by_tag=by_tag,
-        gamification=gamification # Passamos o objeto para o HTML
+        gamification=gamification,
+        due_count=due_count, # <--- Enviando a variável que faltava!
+        total=total
+    )
+
+@app.get("/study")
+def study_session():
+    # Gamificação na tela de estudo
+    total = S.count_total()
+    gamification = calculate_level(total, total)
+
+    # Busca card pendente
+    now = datetime.utcnow()
+    card = Entry.query.filter(
+        (Entry.next_review <= now) | (Entry.next_review == None)
+    ).order_by(Entry.next_review.asc()).first()
+
+    if not card:
+        return render_template("study_finished.html", gamification=gamification)
+
+    return render_template("study_card.html", card=card, gamification=gamification)
+
+@app.post("/study/<int:id>/grade")
+def study_grade(id):
+    card = Entry.query.get_or_404(id)
+    grade = int(request.form.get("grade", 0))
+    
+    # Algoritmo SM-2
+    new_interval, new_ease, next_date = calculate_next_review(
+        grade, card.interval, card.ease_factor
     )
     
-
+    # Atualiza
+    card.interval = new_interval
+    card.ease_factor = new_ease
+    card.next_review = next_date
+    card.review_count += 1 # Agora a coluna existe no banco!
+    
+    if grade >= 3:
+        card.repetitions += 1
+    else:
+        card.repetitions = 0
+        
+    db.session.commit()
+    return redirect(url_for("study_session"))
 
 @app.post("/add")
 def add():
     term = request.form["term"].strip()
     meaning = request.form.get("meaning","").strip()
-    example = request.form.get("example","").strip()
-    deck = request.form.get("deck", DEFAULT_DECK).strip() or DEFAULT_DECK
-    model = request.form.get("model", DEFAULT_MODEL).strip() or DEFAULT_MODEL
-    tags = request.form.get("tags", DEFAULT_TAGS).strip() or DEFAULT_TAGS
+    target_word = request.form.get("target_word", "").strip()
+    
+    # Defaults
+    deck = DEFAULT_DECK
+    model = DEFAULT_MODEL
+    
+    if not term:
+        flash("A frase é obrigatória!")
+        return redirect(url_for("index"))
 
-    e = Entry(term=term, meaning=meaning, example=example, deck=deck, model=model, tags=tags, unique_key=to_unique_key(term))
+    e = Entry(
+        term=term, 
+        meaning=meaning, 
+        target_word=target_word,
+        deck=deck, 
+        model=model, 
+        status="active",
+        unique_key=to_unique_key(term)
+    )
     db.session.add(e)
     db.session.commit()
     flash("Adicionado ao baú.")
     return redirect(url_for("index"))
 
-@app.post("/push/<int:eid>")
-def push(eid):
-    e = Entry.query.get_or_404(eid)
-    # criar deck se não existir
-    create_deck(e.deck)
-    fields = {"Front": e.term, "Back": f"{e.meaning}\n\n{e.example}".strip()}
-    tags = [t.strip() for t in (e.tags or "").split() if t.strip()]
-    if e.anki_note_id:
-        update_note_fields(e.anki_note_id, fields)
-        flash(f"Nota {e.anki_note_id} atualizada no Anki.")
-    else:
-        note_id = add_note(e.deck, e.model, fields, tags)
-        e.anki_note_id = note_id
-        db.session.commit()
-        flash(f"Enviado ao Anki (note_id {note_id}).")
-    return redirect(url_for("index"))
-
-@app.get("/entry/<int:eid>")
-def detail(eid):
-    e = Entry.query.get_or_404(eid)
-    return render_template("detail.html", e=e)
-
-@app.post("/entry/<int:eid>/edit")
-def edit(eid):
-    e = Entry.query.get_or_404(eid)
-    for field in ["term","meaning","example","deck","model","tags"]:
-        val = request.form.get(field, getattr(e, field))
-        setattr(e, field, val)
-    e.unique_key = to_unique_key(e.term)
-    db.session.commit()
-    flash("Atualizado.")
-    return redirect(url_for("detail", eid=e.id))
-
 if __name__ == "__main__":
-    # host="0.0.0.0" permite acesso externo ao container
     app.run(host="0.0.0.0", debug=True)

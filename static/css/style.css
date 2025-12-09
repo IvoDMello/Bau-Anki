@@ -1,0 +1,115 @@
+/* Layout Geral */
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* Ocupa a tela toda */
+    justify-content: space-between;
+    padding: 1rem;
+    box-sizing: border-box;
+    background-size: cover;
+    background-position: center;
+}
+
+/* Temas de Fundo por Nível */
+.level-0 { background-color: #f0f0f0; } /* Simples */
+.level-1 { background: linear-gradient(to bottom, #87CEEB, #E0F7FA); } /* Céu/Clean */
+.level-2 { background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d); } /* Épico */
+
+/* TOPO */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.user-profile { display: flex; align-items: center; gap: 10px; }
+.avatar { font-size: 2rem; background: #ddd; border-radius: 50%; padding: 5px; }
+.user-info { display: flex; flex-direction: column; }
+.username { font-weight: bold; font-size: 1.1rem; }
+.level-badge { font-size: 0.8rem; color: #666; }
+
+.progress-bar {
+    width: 100px;
+    height: 6px;
+    background: #eee;
+    border-radius: 3px;
+    margin-top: 4px;
+}
+.progress-bar .fill {
+    height: 100%;
+    background: #4CAF50;
+    border-radius: 3px;
+}
+
+.top-nav { display: flex; gap: 5px; }
+.nav-btn {
+    text-decoration: none;
+    font-size: 0.8rem;
+    padding: 5px 8px;
+    border-radius: 5px;
+    background: #fff;
+    color: #333;
+}
+.nav-btn:hover { background: #eee; }
+
+/* CENTRO */
+.game-main {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+.chest-anim {
+    max-width: 250px;
+    transition: transform 0.3s;
+    drop-shadow: 0 10px 10px rgba(0,0,0,0.3);
+}
+.chest-anim:hover { transform: scale(1.05); }
+
+/* BAIXO (Botões Grandes) */
+.game-actions {
+    display: grid;
+    grid-template-columns: 1fr 2fr; /* Adicionar ocupa 1 parte, Estudar ocupa 2 */
+    gap: 15px;
+    padding-bottom: 20px;
+}
+
+.action-btn {
+    border: none;
+    padding: 20px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    border-radius: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    position: relative;
+    color: white;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+.add-btn { background-color: #9c27b0; } /* Roxo */
+.study-btn { background-color: #ff9800; display: flex; justify-content: center; align-items: center; } /* Laranja */
+
+.notification-badge {
+    background: red;
+    color: white;
+    border-radius: 50%;
+    padding: 5px 10px;
+    font-size: 0.9rem;
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
