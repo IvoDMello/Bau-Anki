@@ -30,31 +30,30 @@ db.init_app(app)
 with app.app_context():
     db.create_all()
 
-# --- NOVO: Context Processor para injetar variáveis globais ---
+# --- Context Processor (Variáveis Globais) ---
 @app.context_processor
 def inject_globals():
-    # Isso garante que 'total' esteja disponível em TODAS as telas (evita erros no base.html)
+    # Garante que 'total' esteja disponível em TODAS as telas (evita erros no base.html)
     return dict(total=S.count_total())
 
+# --- ROTA: HOME / DASHBOARD ---
 @app.get("/")
 def index():
     # Analytics
-    total = S.count_total() # (Ainda calculamos aqui para usar na gamificação)
+    total = S.count_total()
     today = S.count_today()
     by_tag = S.count_by_tag()
     
-    # --- A CORREÇÃO DO ERRO ESTÁ AQUI 👇 ---
-    # Contar quantos cards vencem hoje ou antes (para o badge vermelho)
+    # Cards vencidos (Due)
     now = datetime.utcnow()
     due_count = Entry.query.filter(
         (Entry.next_review <= now) | (Entry.next_review == None)
     ).count()
-    # --------------------------------------
 
     # Gamificação
     gamification = calculate_level(total, total)
     
-    # Busca as últimas entradas para a lista (opcional, se quiser mostrar abaixo)
+    # Lista de últimas entradas para exibir na home (Opcional, mas útil)
     entries = Entry.query.order_by(Entry.created_at.desc()).limit(10).all()
     
     return render_template(
@@ -63,17 +62,17 @@ def index():
         today=today, 
         by_tag=by_tag,
         gamification=gamification,
-        due_count=due_count, # <--- Enviando a variável que faltava!
+        due_count=due_count,
         total=total
     )
 
+# --- ROTAS DE ESTUDO (SRS) ---
 @app.get("/study")
 def study_session():
-    # Gamificação na tela de estudo
     total = S.count_total()
     gamification = calculate_level(total, total)
 
-    # Busca card pendente
+    # Busca card pendente (Vencido ou Novo)
     now = datetime.utcnow()
     card = Entry.query.filter(
         (Entry.next_review <= now) | (Entry.next_review == None)
@@ -94,11 +93,11 @@ def study_grade(id):
         grade, card.interval, card.ease_factor
     )
     
-    # Atualiza
+    # Atualiza no Banco
     card.interval = new_interval
     card.ease_factor = new_ease
     card.next_review = next_date
-    card.review_count += 1 # Agora a coluna existe no banco!
+    card.review_count += 1
     
     if grade >= 3:
         card.repetitions += 1
@@ -108,6 +107,7 @@ def study_grade(id):
     db.session.commit()
     return redirect(url_for("study_session"))
 
+# --- ROTA: ADICIONAR NOVA PALAVRA ---
 @app.post("/add")
 def add():
     term = request.form["term"].strip()
@@ -135,6 +135,95 @@ def add():
     db.session.commit()
     flash("Adicionado ao baú.")
     return redirect(url_for("index"))
+
+# --- NOVAS ROTAS (Edição e Anki) ---
+
+@app.route("/entry/<int:id>", methods=["GET"])
+def detail(id):
+    """Exibe a tela de detalhes/edição de uma palavra específica."""
+    entry = Entry.query.get_or_404(id)
+    
+    # Necessário para manter o estilo visual correto
+    total = S.count_total()
+    gamification = calculate_level(total, total)
+    
+    return render_template("detail.html", e=entry, gamification=gamification)
+
+@app.post("/entry/<int:id>/edit")
+def edit_entry(id):
+    """Processa o formulário de edição."""
+    entry = Entry.query.get_or_404(id)
+    
+    # Atualiza os campos com o que veio do form
+    entry.term = request.form.get("term")
+    entry.meaning = request.form.get("meaning")
+    entry.example = request.form.get("example")
+    entry.deck = request.form.get("deck")
+    entry.model = request.form.get("model")
+    entry.tags = request.form.get("tags")
+    
+    # Tenta atualizar no Anki se já estiver sincronizado
+    if entry.anki_note_id:
+        try:
+            fields = {
+                "Front": entry.term,
+                "Back": entry.meaning
+            }
+            # Se quiser enviar o exemplo junto, concatenamos no Back (opcional)
+            if entry.example:
+                fields["Back"] += f"<br><br><small>{entry.example}</small>"
+
+            update_note_fields(entry.anki_note_id, fields)
+            flash("Atualizado no Baú e no Anki!", "success")
+        except Exception as e:
+            # Não impede de salvar no banco local, apenas avisa
+            flash(f"Salvo no Baú, mas erro no Anki: {e}", "warning")
+    else:
+        flash("Entrada atualizada.", "success")
+        
+    db.session.commit()
+    return redirect(url_for("detail", id=id))
+
+@app.post("/push/<int:id>")
+def push_to_anki(id):
+    """Envia uma nota nova para o Anki via AnkiConnect."""
+    entry = Entry.query.get_or_404(id)
+    
+    if entry.anki_note_id:
+        flash("Essa nota já parece estar no Anki (ID existe).", "info")
+        return redirect(url_for("detail", id=id))
+        
+    try:
+        # Prepara os campos
+        fields = {
+            "Front": entry.term,
+            "Back": entry.meaning or ""
+        }
+        if entry.example:
+            fields["Back"] += f"<br><br><small>{entry.example}</small>"
+
+        # Prepara tags
+        tags = entry.tags.split() if entry.tags else ["wordvault"]
+        
+        # Chama a API (ankiconnect.py)
+        note_id = add_note(
+            deck=entry.deck,
+            model=entry.model,
+            fields=fields,
+            tags=tags,
+            allow_duplicate=False
+        )
+        
+        # Salva o ID retornado
+        entry.anki_note_id = note_id
+        db.session.commit()
+        
+        flash(f"Sucesso! Nota criada no Anki (ID: {note_id})", "success")
+        
+    except Exception as e:
+        flash(f"Erro ao conectar com Anki: {str(e)}", "error")
+        
+    return redirect(url_for("detail", id=id))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

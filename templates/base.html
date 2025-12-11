@@ -5,48 +5,15 @@
   <title>WordVault (Nível {{ gamification.level }})</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  {# --- LÓGICA DE EVOLUÇÃO VISUAL --- #}
-  
-  {% if gamification.style_mode == 'bare-bones' %}
-    <style>
-      body { font-family: "Courier New", monospace; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fff; }
-      header { border-bottom: 2px solid black; margin-bottom: 20px; }
-      .badge { border: 1px solid black; padding: 2px; }
-      /* Aviso irritante proposital para motivar o usuário */
-      .upgrade-warning { background: yellow; border: 1px solid black; padding: 10px; font-weight: bold; }
-    </style>
-
-  {% elif gamification.style_mode == 'basic-css' %}
+  {# CSS Condicional #}
+  {% if gamification.level >= 2 %}
     <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" rel="stylesheet">
-    <style>
-      :root { --brand: #0a7cff; }
-      header h2 { color: var(--brand); }
-      .badge { display:inline-block; padding:0.2rem 0.5rem; border-radius:999px; background:#eee; }
-    </style>
-
-  {% else %}
-    <link href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" rel="stylesheet">
-    <style>
-      :root { 
-        --brand: #7952b3; 
-        --pico-font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        --pico-background-color: #11191f;
-        --pico-color: #fbfbfc;
-      }
-      body { background: linear-gradient(135deg, #11191f 0%, #203a43 100%); min-height: 100vh; }
-      header h2 { 
-        background: -webkit-linear-gradient(#eee, #333); 
-        background-clip: text; 
-        text-shadow: 0 0 10px rgba(0,255,255,0.5);
-        color: var(--brand);
-      }
-      main.container { background: rgba(0,0,0,0.3); padding: 20px; border-radius: 15px; backdrop-filter: blur(5px); }
-      .badge { background: var(--brand); color: white; box-shadow: 0 0 10px var(--brand); }
-    </style>
   {% endif %}
-
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="container">
+
+{# AQUI: Adicionamos um bloco na classe para poder tirar o 'container' na Home #}
+<body class="{% block body_class %}container{% endblock %} mode-{{ gamification.style_mode }}">
   
   {% if gamification.level < 2 %}
   <div class="upgrade-warning">
@@ -54,16 +21,26 @@
   </div>
   {% endif %}
 
+  {# AQUI: Envolvemos o header padrão em um bloco para podermos escondê-lo #}
+  {% block header %}
   <header>
       <h2>WordVault — {{ gamification.title }}</h2>
       <small>Total: {{ total }} palavras</small>
   </header>
+  {% endblock %}
 
+  {# Mensagens de erro/sucesso #}
   {% for m in get_flashed_messages() %}<div class="alert">{{ m }}</div>{% endfor %}
+  
+  {# O conteúdo principal #}
   <main>{% block content %}{% endblock %}</main>
   
+  {# AQUI: Envolvemos o footer também #}
+  {% block footer %}
   <footer>
       <small>Local-first • Integrado ao Anki • Nível Atual: {{ gamification.level }}</small>
   </footer>
+  {% endblock %}
+
 </body>
 </html>

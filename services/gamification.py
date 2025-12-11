@@ -8,10 +8,10 @@ def calculate_level(total_words, unique_words):
     if total_words < 5:
         return {
             "level": 1,
-            "title": "Novato do ASCII",
+            "title": "Jovem Gafanhoto",
             "style_mode": "level-1",
-            "chest_image": "baunvl1.png",  # Imagem do Baú Nível 1
-            "bg_image": "fundonvl1.png",   # Fundo Nível 1
+            "chest_image": "css/BauNvl1.png", 
+            "bg_image": "css/FundoNvl1.png",
             "next_goal": 5
         }
     

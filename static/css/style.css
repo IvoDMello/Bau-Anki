@@ -1,115 +1,282 @@
-/* Layout Geral */
-.game-wrapper {
-    display: flex;
-    flex-direction: column;
-    height: 100vh; /* Ocupa a tela toda */
-    justify-content: space-between;
-    padding: 1rem;
-    box-sizing: border-box;
-    background-size: cover;
-    background-position: center;
+/* IMPORTANTE: Importando fontes estilo RPG */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700&display=swap');
+
+:root {
+    --bg-dark: #1a1512;
+    --panel-bg: rgba(20, 15, 13, 0.85);
+    --accent-gold: #c5a059;
+    --text-main: #e0e0e0;
+    --text-muted: #8b8b8b;
+    --border-radius: 12px;
 }
 
-/* Temas de Fundo por Nível */
-.level-0 { background-color: #f0f0f0; } /* Simples */
-.level-1 { background: linear-gradient(to bottom, #87CEEB, #E0F7FA); } /* Céu/Clean */
-.level-2 { background: radial-gradient(circle, #1a2a6c, #b21f1f, #fdbb2d); } /* Épico */
+body {
+    margin: 0;
+    font-family: 'Lato', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    overflow: hidden; /* Para garantir que a imagem de fundo não crie scroll desnecessário */
+}
 
-/* TOPO */
+/* O Wrapper que segura a imagem de fundo */
+.game-wrapper {
+    /* Altura dinâmica que respeita as barras do navegador */
+    height: 100vh; /* Fallback para navegadores antigos */
+    height: 100dvh; 
+    
+    width: 100vw;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    
+    /* Importante: garante que o padding não aumente o tamanho total */
+    box-sizing: border-box; 
+    padding: 15px; /* Reduzi um pouco o padding geral */
+    
+    position: relative;
+    overflow: hidden; /* Evita barras de rolagem na página inteira */
+}
+
+/* Overlay escuro para melhorar leitura sobre a imagem */
+.game-wrapper::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.8) 100%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ================= HEADER FLUTUANTE ================= */
 .game-header {
+    position: relative;
+    z-index: 10;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255, 255, 255, 0.8);
-    padding: 10px;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    background: var(--panel-bg);
+    padding: 10px 20px;
+    border-radius: 50px; /* Formato de pílula */
+    border: 1px solid rgba(197, 160, 89, 0.3); /* Borda dourada sutil */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    backdrop-filter: blur(5px);
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
 }
 
-.user-profile { display: flex; align-items: center; gap: 10px; }
-.avatar { font-size: 2rem; background: #ddd; border-radius: 50%; padding: 5px; }
-.user-info { display: flex; flex-direction: column; }
-.username { font-weight: bold; font-size: 1.1rem; }
-.level-badge { font-size: 0.8rem; color: #666; }
-
-.progress-bar {
-    width: 100px;
-    height: 6px;
-    background: #eee;
-    border-radius: 3px;
-    margin-top: 4px;
-}
-.progress-bar .fill {
-    height: 100%;
-    background: #4CAF50;
-    border-radius: 3px;
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
-.top-nav { display: flex; gap: 5px; }
-.nav-btn {
-    text-decoration: none;
-    font-size: 0.8rem;
-    padding: 5px 8px;
-    border-radius: 5px;
-    background: #fff;
-    color: #333;
-}
-.nav-btn:hover { background: #eee; }
-
-/* CENTRO */
-.game-main {
-    flex-grow: 1;
+.avatar {
+    width: 45px;
+    height: 45px;
+    background: #000;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    text-align: center;
+    border: 2px solid var(--accent-gold);
+    font-size: 1.5rem;
 }
-.chest-anim {
-    max-width: 250px;
-    transition: transform 0.3s;
-    drop-shadow: 0 10px 10px rgba(0,0,0,0.3);
-}
-.chest-anim:hover { transform: scale(1.05); }
 
-/* BAIXO (Botões Grandes) */
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.username {
+    font-family: 'Cinzel', serif;
+    font-weight: 700;
+    color: var(--accent-gold);
+    font-size: 1.1rem;
+    letter-spacing: 1px;
+}
+
+.level-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.progress-bar {
+    width: 80px;
+    height: 6px;
+    background: #333;
+    border-radius: 3px;
+    overflow: hidden;
+}
+.progress-bar .fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b6c2c, #c5a059);
+}
+
+/* NAV BUTTONS (Pílulas) */
+.top-nav {
+    display: flex;
+    gap: 10px;
+}
+
+.nav-btn {
+    text-decoration: none;
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-family: 'Cinzel', serif;
+    font-size: 0.9rem;
+    background: rgba(255,255,255,0.05);
+    transition: all 0.3s ease;
+    border: 1px solid transparent;
+}
+
+.nav-btn:hover, .nav-btn.active {
+    background: rgba(197, 160, 89, 0.2);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+/* ================= CENTRO (BAÚ) ================= */
+.game-main {
+    position: relative;
+    z-index: 5;
+    flex-grow: 1; /* Ocupa todo o espaço disponível no meio */
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    justify-content: flex-end; 
+    
+    /* Adicione este padding para ele não ficar colado nos botões */
+    padding-bottom: 50px; 
+    /* -------------------- */
+    
+    /* Se a tela for muito pequena, permite rolar SÓ o meio */
+    overflow-y: auto; 
+    min-height: 0; 
+}
+
+.chest-display {
+    text-align: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.chest-anim {
+    /* --- MUDANÇA AQUI --- */
+    width: auto;
+    
+    /* Aumente de 250px para 500px (ou mais, se quiser gigante) */
+    max-width: 500px; 
+    
+    height: auto;
+    
+    /* Aumente de 35vh para 55vh (ocupa mais da metade da altura vertical) */
+    max-height: 55vh; 
+    /* -------------------- */
+    
+    filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+    transition: transform 0.3s;
+    cursor: pointer;
+    
+    /* Garante que a imagem não fique distorcida */
+    object-fit: contain;
+}
+.chest-anim:hover {
+    transform: scale(1.05);
+}
+
+/* Ajuste na mensagem flutuante para ficar mais perto do baú */
+.chest-message {
+    margin-top: 5px; /* Reduzi a margem */
+    background: rgba(0,0,0,0.6);
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: inline-block;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+.chest-message h2 { margin: 0; font-family: 'Cinzel', serif; color: var(--accent-gold); font-size: 1.2rem; }
+.chest-message p { margin: 0; font-size: 0.9rem; color: #ccc; }
+
+/* ================= FOOTER (BOTÕES DE AÇÃO) ================= */
 .game-actions {
-    display: grid;
-    grid-template-columns: 1fr 2fr; /* Adicionar ocupa 1 parte, Estudar ocupa 2 */
-    gap: 15px;
+    position: relative;
+    z-index: 10;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
     padding-bottom: 20px;
 }
 
 .action-btn {
-    border: none;
-    padding: 20px;
+    background: linear-gradient(180deg, #2b2b2b 0%, #1a1a1a 100%);
+    color: var(--text-main);
+    border: 1px solid #444;
+    padding: 15px 40px;
+    border-radius: 30px;
+    font-family: 'Cinzel', serif;
     font-size: 1.2rem;
-    font-weight: bold;
-    border-radius: 15px;
     cursor: pointer;
     text-decoration: none;
+    min-width: 200px;
     text-align: center;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
     position: relative;
-    color: white;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }
 
-.add-btn { background-color: #9c27b0; } /* Roxo */
-.study-btn { background-color: #ff9800; display: flex; justify-content: center; align-items: center; } /* Laranja */
-
-.notification-badge {
-    background: red;
-    color: white;
-    border-radius: 50%;
-    padding: 5px 10px;
-    font-size: 0.9rem;
-    position: absolute;
-    top: -10px;
-    right: -10px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    animation: bounce 1s infinite;
+.action-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.5);
+    border-color: var(--accent-gold);
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
+.action-btn span {
+    font-size: 0.7rem;
+    font-family: 'Lato', sans-serif;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Botão Primário (Estudar) destaque */
+.study-btn {
+    border: 1px solid var(--accent-gold);
+    background: linear-gradient(180deg, #3d321d 0%, #1f190e 100%);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Modal Dark */
+dialog {
+    background: #1a1512;
+    color: #e0e0e0;
+    border: 1px solid var(--accent-gold);
+    border-radius: 12px;
+}
+input {
+    background: #000;
+    border: 1px solid #333;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    width: 100%;
 }

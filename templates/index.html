@@ -1,16 +1,25 @@
 {% extends "base.html" %}
 
+{# 1. Removemos a classe 'container' para o fundo ocupar 100% da tela #}
+{% block body_class %}{% endblock %}
+
+{# 2. Dizemos que o header padrão deve ser VAZIO (pois já temos o nosso personalizado) #}
+{% block header %}{% endblock %}
+
+{# 3. Dizemos que o footer padrão deve ser VAZIO #}
+{% block footer %}{% endblock %}
+
 {% block content %}
 <div class="game-wrapper" 
-     style="background-image: url('{{ url_for('static', filename='images/' + gamification.bg_image) }}');">
+     style="background-image: url('{{ url_for('static', filename=gamification.bg_image) }}');">
 
   <header class="game-header">
     <div class="user-profile">
-      <div class="avatar">👤</div> 
+      <div class="avatar">💀</div>
       <div class="user-info">
         <span class="username">Ivo</span>
         <div class="level-indicator">
-          <span class="level-badge">Nível {{ gamification.level }}</span>
+          <span>Nv. {{ gamification.level }}</span>
           <div class="progress-bar">
             <div class="fill" style="width: {{ (total % 20) * 5 }}%"></div>
           </div>
@@ -19,37 +28,35 @@
     </div>
 
     <nav class="top-nav">
-      <a href="{{ url_for('index') }}" class="nav-btn active">🏠 Início</a>
-      <a href="#" class="nav-btn">🏆 Ranking</a>
-      <a href="#" class="nav-btn">📊 Stats</a>
-      <a href="#" class="nav-btn">📚 Baú</a>
+      <a href="{{ url_for('index') }}" class="nav-btn active">Início</a>
+      <a href="#" class="nav-btn">Ranking</a>
+      <a href="#" class="nav-btn">Stats</a>
+      <a href="#" class="nav-btn">Baú</a>
     </nav>
   </header>
 
   <main class="game-main">
-    <div class="chest-display">
-      <img src="{{ url_for('static', filename='images/' + gamification.chest_image) }}" 
-           alt="Baú do Tesouro" 
-           class="chest-anim">
-      
-      <div class="chest-message">
+    <div class="chest-message">
         <h2>{{ gamification.title }}</h2>
-        <p>Você tem <strong>{{ total }}</strong> frases guardadas.</p>
+        <p>{{ total }} itens coletados</p>
       </div>
+    <div class="chest-display">
+      <img src="{{ url_for('static', filename=gamification.chest_image) }}" 
+           alt="Baú" 
+           class="chest-anim">
     </div>
   </main>
 
   <footer class="game-actions">
     
-    <button class="action-btn add-btn" onclick="document.getElementById('add-modal').showModal()">
-      ➕ Adicionar
+    <button class="action-btn" onclick="document.getElementById('add-modal').showModal()">
+      Adicionar
+      <span>Nova Palavra</span>
     </button>
 
-    <a href="{{ url_for('study_session') }}" class="action-btn study-btn" role="button">
-      ⚔️ Estudar
-      {% if due_count > 0 %}
-        <span class="notification-badge">{{ due_count }}</span>
-      {% endif %}
+    <a href="{{ url_for('study_session') }}" class="action-btn study-btn">
+      Estudar
+      <span>{{ due_count }} Cards Pendentes</span>
     </a>
 
   </footer>
@@ -59,26 +66,22 @@
 <dialog id="add-modal">
   <article>
     <header>
-      <h3>Adicionar ao Baú</h3>
-      <button aria-label="Close" rel="prev" onclick="this.closest('dialog').close()"></button>
+      <h3 style="font-family: 'Cinzel', serif; color: var(--accent-gold);">📜 Novo Pergaminho</h3>
     </header>
     <form action="{{ url_for('add') }}" method="POST">
-      <label>
-        Frase
-        <input type="text" name="term" placeholder="Ex: We need to move onwards" required>
+      <label style="margin-top: 10px; display:block;">Frase Original
+        <input type="text" name="term" required placeholder="...">
       </label>
-      <label>
-        Significado / Tradução
-        <input type="text" name="meaning" placeholder="Ex: Precisamos seguir em frente">
+      <label style="margin-top: 10px; display:block;">Significado
+        <input type="text" name="meaning" placeholder="...">
       </label>
-      <label>
-        Palavra Foco (Opcional)
-        <input type="text" name="target_word" placeholder="Ex: onwards">
+      <label style="margin-top: 10px; display:block;">Foco (Target)
+        <input type="text" name="target_word" placeholder="...">
       </label>
       
-      <footer>
-        <button type="button" class="secondary" onclick="this.closest('dialog').close()">Cancelar</button>
-        <button type="submit">Salvar no Baú</button>
+      <footer style="margin-top: 20px; display: flex; gap: 10px; justify-content: flex-end;">
+        <button type="button" onclick="this.closest('dialog').close()" style="background:transparent; border:1px solid #666; color:#ccc; padding:8px 15px; cursor:pointer;">Cancelar</button>
+        <button type="submit" style="background:var(--accent-gold); color:#000; border:none; padding:8px 20px; font-weight:bold; cursor:pointer;">Salvar</button>
       </footer>
     </form>
   </article>
